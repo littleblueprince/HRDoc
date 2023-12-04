@@ -11,8 +11,9 @@ import tqdm
 from ..utils.vocab import TypeVocab, RelationVocab
 from torchvision.transforms import functional as F
 
+
 class PickleLoader():
-    
+
     def __init__(self, json_path, ly_vocab=TypeVocab(), re_vocab=RelationVocab(), mode='test'):
         self.json_path = json_path
         self.mode = mode
@@ -20,7 +21,7 @@ class PickleLoader():
         self.init()
         self.ly_vocab = ly_vocab
         self.re_vocab = re_vocab
-        
+
     def init(self):
         jd = json.load(open(self.json_path, "r"))
         for pdf_path in jd.keys():
@@ -32,10 +33,10 @@ class PickleLoader():
             for cl in anno_jd:
                 pages.add(cl['page'])
             for page_id in sorted(list(pages)):
-                lines.append([x for x in anno_jd if x['page']==page_id])
+                lines.append([x for x in anno_jd if x['page'] == page_id])
             temp_data = {
-                'lines': lines, 
-                'page_num': len(lines), 
+                'lines': lines,
+                'page_num': len(lines),
                 'imgs_path': imgs_path,
                 'pdf_path': pdf_path
             }
@@ -62,7 +63,7 @@ class PickleLoader():
             encoder_input=encoder_input,
             lines=data['lines'],
             pdf_path=data['pdf_path']
-        )            
+        )
 
     def cal_items(self, data):
         texts, bboxes = [], []
@@ -85,6 +86,8 @@ class PickleLoader():
             encoder_input.append(image)
 
         return encoder_input, texts, bboxes
+
+
 
 def valid_collate_func(batch_data):
     batch_size = len(batch_data)
@@ -109,7 +112,7 @@ def valid_collate_func(batch_data):
         encoder_input = torch.zeros(len(data['encoder_input']), input_channels, max_H, max_W).to(torch.float32)
         encoder_input_mask = torch.zeros(len(data['encoder_input']), 1, max_H, max_W).to(torch.float32)
         image_size = []
-        
+
         for page_id, encoder_input_page in enumerate(data['encoder_input']):
             encoder_input[page_id, :, :encoder_input_page.shape[1], :encoder_input_page.shape[2]] = encoder_input_page
             encoder_input_mask[page_id, :, :encoder_input_page.shape[1], :encoder_input_page.shape[2]] = 1.

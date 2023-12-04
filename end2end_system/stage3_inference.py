@@ -18,7 +18,7 @@ def init():
     parser.add_argument("--cfg", type=str, default='infer')
     parser.add_argument("--local_rank", type=int, default=0)
     args = parser.parse_args()
-    
+
     setup_config(args.cfg)
 
     os.environ['LOCAL_RANK'] = str(args.local_rank)
@@ -33,8 +33,9 @@ def recover_json(cfg, ly_pred, re_pred, pa_pred, texts, bboxes):
         assert len(vocab.struct_word_ids)
         mask = ly == vocab.struct_word_ids[0]
         for i in range(1, len(vocab.struct_word_ids)):
-            mask |=  ly == vocab.struct_word_ids[i]
+            mask |= ly == vocab.struct_word_ids[i]
         return mask
+
     def recover_parent(struct_mask, struct_id):
         s_id = 0
         s_id2tol_id = {}
@@ -44,18 +45,20 @@ def recover_json(cfg, ly_pred, re_pred, pa_pred, texts, bboxes):
                 s_id2tol_id[s_id] = b_id
         converted = []
         for i in struct_id.cpu().numpy().tolist():
-            converted.append(s_id2tol_id[i] if i!= 0 else 0)
+            converted.append(s_id2tol_id[i] if i != 0 else 0)
         return torch.tensor(converted).to(struct_id)
+
     ly_pred_mask = cal_struct_mask(ly_pred, cfg.ly_vocab)
-    pa_pred = pa_pred*torch.tril(torch.ones(pa_pred.shape[0], pa_pred.shape[1], device=pa_pred.device), diagonal=0)
-    pa_pred = pa_pred-torch.triu(torch.ones(pa_pred.shape[0], pa_pred.shape[1], device=pa_pred.device)*1e8, diagonal=1)
+    pa_pred = pa_pred * torch.tril(torch.ones(pa_pred.shape[0], pa_pred.shape[1], device=pa_pred.device), diagonal=0)
+    pa_pred = pa_pred - torch.triu(torch.ones(pa_pred.shape[0], pa_pred.shape[1], device=pa_pred.device) * 1e8,
+                                   diagonal=1)
     pa_pred_softmax = torch.softmax(pa_pred, dim=-1)
     pa_pred_argmax = torch.argmax(pa_pred_softmax, dim=-1)
     pa_pred_argmax = recover_parent(ly_pred_mask, pa_pred_argmax)
     pa_pred_extend = torch.zeros_like(ly_pred)
-    pa_pred_extend=pa_pred_extend.scatter(0, torch.squeeze(torch.nonzero(ly_pred_mask), dim=-1), pa_pred_argmax)
+    pa_pred_extend = pa_pred_extend.scatter(0, torch.squeeze(torch.nonzero(ly_pred_mask), dim=-1), pa_pred_argmax)
     re_pred_extend = torch.zeros_like(ly_pred)
-    re_pred_extend=re_pred_extend.scatter(0, torch.squeeze(torch.nonzero(ly_pred_mask), dim=-1), re_pred)
+    re_pred_extend = re_pred_extend.scatter(0, torch.squeeze(torch.nonzero(ly_pred_mask), dim=-1), re_pred)
 
     ly_pred_mask_list = ly_pred_mask.to('cpu').tolist()
     pa_pred_list = pa_pred_extend.to('cpu').tolist()
@@ -88,30 +91,47 @@ def recover_json(cfg, ly_pred, re_pred, pa_pred, texts, bboxes):
 
     return valid_json
 
-def valid(cfg, dataloader, model):
+
+def valid(cfg, dataloader, model, device):
     model.eval()
     tokenizer = cfg.tokenizer
-    extractor = cfg.extractor.to(cfg.device)
-    bert = cfg.bert.to(cfg.device)
+    extractor = cfg.extractor.to(device)
+    bert = cfg.bert.to(device)
     all_predicted_result = list()
     for it, data_batch in enumerate(tqdm.tqdm(dataloader)):
         try:
-            encoder_input = [data.to(cfg.device) for data in data_batch['encoder_input']]
-            encoder_input_mask = [data.to(cfg.device) for data in data_batch['encoder_input_mask']]
-            encoder_input_bboxes = [[torch.tensor(page).to(cfg.device).float() for page in data] for data in data_batch['bboxes']]
+            encoder_input = [data.to(device) for data in data_batch['encoder_input']]
+            encoder_input_mask = [data.to(device) for data in data_batch['encoder_input_mask']]
+            encoder_input_bboxes = [[torch.tensor(page).to(device).float() for page in data] for data in
+                                    data_batch['bboxes']]
             transcripts = data_batch['transcripts']
             image_size = data_batch['image_size']
             pdf_paths = data_batch['pdfs']
             batch_lines = data_batch['lines']
+            print('输入开始')
+            print(encoder_input)
+            print('1输入结束')
+            print(encoder_input_mask)
+            print('2输入结束')
+            print(image_size)
+            print('3输入结束')
+            print(transcripts)
+            print('4输入结束')
+            print(encoder_input_bboxes)
+            print('5输入结束')
+            print(extractor)
+            print('6输入结束')
+            input()
+            pred_result = model(encoder_input, encoder_input_mask, image_size, transcripts,
+                                encoder_input_bboxes, extractor, tokenizer, bert
+                                )
+            ly_cls_preds, (re_cls_preds, pa_att_preds) = pred_result
 
-            pred_result = model(encoder_input, encoder_input_mask, image_size, transcripts, \
-                encoder_input_bboxes, extractor, tokenizer, bert
-            )
 
             # post-procrssing
             ly_cls_preds, (re_cls_preds, pa_att_preds) = pred_result
             # ly_cls_preds = pred_result
-            if ly_cls_preds != None and re_cls_preds != []:
+            if ly_cls_preds is not None and re_cls_preds != []:
                 re_cls_preds = torch.stack(re_cls_preds, dim=1)
                 pa_att_preds = torch.cat(pa_att_preds, dim=1)
                 for batch_idx in range(len(image_size)):
@@ -120,7 +140,8 @@ def valid(cfg, dataloader, model):
                     bboxes_batch = encoder_input_bboxes[batch_idx]
                     re_cls_preds_pb = re_cls_preds[batch_idx]
                     pa_att_preds_pb = pa_att_preds[batch_idx]
-                    json_data = recover_json(cfg, ly_cls_preds_pb, re_cls_preds_pb, pa_att_preds_pb, transcripts_batch, bboxes_batch)
+                    json_data = recover_json(cfg, ly_cls_preds_pb, re_cls_preds_pb, pa_att_preds_pb, transcripts_batch,
+                                             bboxes_batch)
                     all_predicted_result.append({
                         'pdf': pdf_paths[batch_idx],
                         'decoded_json': json_data
@@ -148,27 +169,32 @@ def load_checkpoint(checkpoint, model, optimizer=None):
 
     model.load_state_dict(checkpoint['model_param'])
 
+
 def main():
     init()
 
-    valid_dataloader = create_valid_dataloader(cfg.ly_vocab, cfg.re_vocab, cfg.valid_data_path, cfg.valid_batch_size, cfg.valid_num_workers)
+    valid_dataloader = create_valid_dataloader(cfg.ly_vocab, cfg.re_vocab,
+                                               'E:\Static\HRDoc\end2end_system\pdf_parser\\acl_stage2.json',
+                                               cfg.valid_batch_size,
+                                               cfg.valid_num_workers)
     logger.info(
         'Valid dataset have %d samples, %d batchs with batch_size=%d' % \
-            (
-                len(valid_dataloader.dataset),
-                len(valid_dataloader.batch_sampler),
-                valid_dataloader.batch_size
-            )
+        (
+            len(valid_dataloader.dataset),
+            len(valid_dataloader.batch_sampler),
+            valid_dataloader.batch_size
+        )
     )
 
     model = build_model(cfg)
-    model.cuda()
-    
-    load_checkpoint('models/best_re_acc_model.pth', model)
+    # model.cuda()
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+    model.to(device)
+    # load_checkpoint('models/best_re_acc_model.pth', model)
 
     with torch.no_grad():
         try:
-            valid(cfg, valid_dataloader, model)
+            valid(cfg, valid_dataloader, model, device)
         except RuntimeError as E:
             if 'out of memory' in str(E):
                 logger.info(' CUDA Out Of Memory')
@@ -183,5 +209,7 @@ if __name__ == '__main__':
         torch.cuda.manual_seed_all(seed)
         np.random.seed(seed)
         random.seed(seed)
+
+
     setup_seed(2021)
     main()

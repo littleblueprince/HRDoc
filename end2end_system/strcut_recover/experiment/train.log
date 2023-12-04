@@ -1,0 +1,49 @@
+2023-12-01 13:07:21,341 Document Decoder Model INFO: Use config: infer
+2023-12-01 13:08:39,932 Document Decoder Model INFO: Use config: infer
+2023-12-01 13:09:12,335 Document Decoder Model INFO: Use config: infer
+2023-12-01 18:40:56,472 Document Decoder Model INFO: Use config: infer
+2023-12-01 18:41:43,884 Document Decoder Model INFO: Use config: infer
+2023-12-02 12:42:48,366 Document Decoder Model INFO: Use config: infer
+2023-12-02 12:43:46,345 Document Decoder Model INFO: Use config: infer
+2023-12-02 12:44:23,077 Document Decoder Model INFO: Use config: infer
+2023-12-02 12:46:08,225 Document Decoder Model INFO: Use config: infer
+2023-12-02 12:47:29,169 Document Decoder Model INFO: Use config: infer
+2023-12-02 12:49:19,353 Document Decoder Model INFO: Use config: infer
+2023-12-02 12:50:57,082 Document Decoder Model INFO: Use config: infer
+2023-12-02 12:56:16,081 Document Decoder Model INFO: Use config: infer
+2023-12-02 12:56:21,217 Document Decoder Model INFO: Train dataset have 900 samples, 29 batchs with batch_size=32
+2023-12-02 18:34:52,155 Document Decoder Model INFO: Use config: infer
+2023-12-02 18:34:56,002 Document Decoder Model INFO: Train dataset have 900 samples, 29 batchs with batch_size=32
+2023-12-02 18:38:20,353 Document Decoder Model INFO: Use config: infer
+2023-12-02 18:38:24,108 Document Decoder Model INFO: Train dataset have 900 samples, 29 batchs with batch_size=32
+2023-12-02 18:44:09,497 Document Decoder Model INFO: Use config: infer
+2023-12-02 18:44:27,608 Document Decoder Model INFO: Train dataset have 900 samples, 29 batchs with batch_size=32
+2023-12-02 18:47:10,525 Document Decoder Model INFO: Use config: infer
+2023-12-02 18:47:14,062 Document Decoder Model INFO: Train dataset have 900 samples, 29 batchs with batch_size=32
+2023-12-02 18:49:13,611 Document Decoder Model INFO: Use config: infer
+2023-12-02 18:49:17,129 Document Decoder Model INFO: Train dataset have 900 samples, 29 batchs with batch_size=32
+2023-12-02 22:07:26,838 Document Decoder Model INFO: Use config: infer
+2023-12-02 22:10:03,455 Document Decoder Model INFO: Use config: infer
+2023-12-02 22:14:30,414 Document Decoder Model INFO: Use config: infer
+2023-12-02 22:15:30,536 Document Decoder Model INFO: Use config: infer
+2023-12-02 22:15:30,541 Document Decoder Model INFO: Valid dataset have 2 samples, 2 batchs with batch_size=1
+2023-12-02 22:16:26,131 Document Decoder Model INFO: Use config: infer
+2023-12-02 22:16:26,134 Document Decoder Model INFO: Valid dataset have 2 samples, 2 batchs with batch_size=1
+2023-12-02 22:43:38,640 Document Decoder Model INFO: Use config: infer
+2023-12-02 22:43:42,299 Document Decoder Model INFO: Train dataset have 900 samples, 29 batchs with batch_size=32
+2023-12-02 22:46:06,049 Document Decoder Model INFO: Use config: infer
+2023-12-02 22:46:09,639 Document Decoder Model INFO: Train dataset have 900 samples, 29 batchs with batch_size=32
+2023-12-02 22:47:49,134 Document Decoder Model INFO: Use config: infer
+2023-12-02 22:48:04,638 Document Decoder Model INFO: Train dataset have 900 samples, 29 batchs with batch_size=32
+2023-12-02 22:51:21,176 Document Decoder Model INFO: Use config: infer
+2023-12-02 22:51:36,379 Document Decoder Model INFO: Train dataset have 900 samples, 29 batchs with batch_size=32
+2023-12-02 23:02:40,012 Document Decoder Model INFO: Use config: infer
+2023-12-02 23:02:40,055 Document Decoder Model INFO: Valid dataset have 2 samples, 2 batchs with batch_size=1
+2023-12-02 23:06:28,829 Document Decoder Model INFO: Use config: infer
+2023-12-02 23:06:28,834 Document Decoder Model INFO: Valid dataset have 2 samples, 2 batchs with batch_size=1
+2023-12-02 23:09:57,443 Document Decoder Model INFO: Use config: infer
+2023-12-02 23:09:57,448 Document Decoder Model INFO: Valid dataset have 2 samples, 2 batchs with batch_size=1
+2023-12-02 23:37:50,019 Document Decoder Model INFO: Use config: infer
+2023-12-02 23:37:50,022 Document Decoder Model INFO: Valid dataset have 2 samples, 2 batchs with batch_size=1
+2023-12-03 12:38:06,450 Document Decoder Model INFO: Use config: infer
+2023-12-03 12:38:06,455 Document Decoder Model INFO: Valid dataset have 2 samples, 2 batchs with batch_size=1

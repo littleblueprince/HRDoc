@@ -15,10 +15,11 @@ logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message
                     level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 def get_detect_bbox(model, img_list):
     result_info = []
     all_img_pages = [int(osp.basename(x).split(".")[0]) for x in img_list]
-    assert set(all_img_pages) == set(list(range(max(all_img_pages)+1))), \
+    assert set(all_img_pages) == set(list(range(max(all_img_pages) + 1))), \
         "Image list should be continuous and start from 0, :{}".format(str(all_img_pages))
     pbar = tqdm.tqdm(img_list)
     for image in pbar:
@@ -27,7 +28,8 @@ def get_detect_bbox(model, img_list):
             result = inference_detector(model, image)
             result_info_image = dict()
             for cls_id, cls in enumerate(model.CLASSES):
-                result_info_image[cls] = [[round(x) for x in result[cls_id].tolist()[i][:4]]+result[cls_id].tolist()[i][4:] \
+                result_info_image[cls] = [
+                    [round(x) for x in result[cls_id].tolist()[i][:4]] + result[cls_id].tolist()[i][4:] \
                     for i in range(len(result[cls_id].tolist()))]
             result_info.append(result_info_image)
         except BaseException as e:
@@ -35,6 +37,7 @@ def get_detect_bbox(model, img_list):
             logger.error("Error message: {}".format(e))
             continue
     return result_info
+
 
 def min_overlap_ratio(box1, box2):
     ''' Note that this is not the standard iou '''
@@ -45,15 +48,17 @@ def min_overlap_ratio(box1, box2):
     if left_max >= right_min or down_min <= up_max:
         return 0
     else:
-        S1 = (box1[2]-box1[0])*(box1[3]-box1[1])
-        S2 = (box2[2]-box2[0])*(box2[3]-box2[1])
-        S_cross = (down_min-up_max)*(right_min-left_max)
-        return S_cross/max(min(S1, S2), 1) # min overlap ratio
+        S1 = (box1[2] - box1[0]) * (box1[3] - box1[1])
+        S2 = (box2[2] - box2[0]) * (box2[3] - box2[1])
+        S_cross = (down_min - up_max) * (right_min - left_max)
+        return S_cross / max(min(S1, S2), 1)  # min overlap ratio
         # return S_cross/(S1+S2-S_cross) if S1+S2-S_cross != 0 else 1 # standard IOU
+
 
 def insert_first_match(cur_page_cls, box, specific_text):
     ''' Find the first place the box should be inserted '''
     assert specific_text != None
+
     def overlap_len(min1, len1, min2, len2):
         min_ = min1
         max_ = min1 + len1
@@ -61,12 +66,13 @@ def insert_first_match(cur_page_cls, box, specific_text):
             min_ = min2
         if (min1 + len1) < (min2 + len2):
             max_ = min2 + len2
-        return max(0, len1+len2-(max_-min_))
+        return max(0, len1 + len2 - (max_ - min_))
+
     need_insert_pos = -1
     for cl_id in range(len(cur_page_cls)):
         cl_box = cur_page_cls[cl_id]['box']
-        overlap_len_ = overlap_len(box[0], box[2]-box[0], cl_box[0], cl_box[2]-cl_box[0])
-        if box[3] < cl_box[3] and overlap_len_/max(min(box[2]-box[0], cl_box[2]-cl_box[0]), 1) > 0.7:
+        overlap_len_ = overlap_len(box[0], box[2] - box[0], cl_box[0], cl_box[2] - cl_box[0])
+        if box[3] < cl_box[3] and overlap_len_ / max(min(box[2] - box[0], cl_box[2] - cl_box[0]), 1) > 0.7:
             need_insert_pos = cl_id
             break
     if need_insert_pos == -1:
@@ -78,17 +84,18 @@ def insert_first_match(cur_page_cls, box, specific_text):
         new_cls.extend(cur_page_cls[need_insert_pos:])
         return new_cls
 
+
 def renew_with_detect(cur_page_cls, bboxes, specific_text=None, must_has_match_text=False):
     if len(cur_page_cls) == 0: return cur_page_cls
     for box in bboxes:
-        if box[-1] < 0.8: continue # Skip those detected box whose confidence lower than 0.8
+        if box[-1] < 0.8: continue  # Skip those detected box whose confidence lower than 0.8
         box = box[:4]
         meet_iou_require_id = []
         for cl_id in range(len(cur_page_cls)):
-            if min_overlap_ratio(box, cur_page_cls[cl_id]['box']) > 0.6: # Find all min_overlap_ratio > 0.6
+            if min_overlap_ratio(box, cur_page_cls[cl_id]['box']) > 0.6:  # Find all min_overlap_ratio > 0.6
                 meet_iou_require_id.append(cl_id)
-        if len(meet_iou_require_id) == 0: 
-            if must_has_match_text: continue # If must_has_match_text but find none, skip this detect box
+        if len(meet_iou_require_id) == 0:
+            if must_has_match_text: continue  # If must_has_match_text but find none, skip this detect box
             new_cls = insert_first_match(cur_page_cls, box, specific_text)
         else:
             min_id = min(meet_iou_require_id)
@@ -96,11 +103,14 @@ def renew_with_detect(cur_page_cls, bboxes, specific_text=None, must_has_match_t
             text = specific_text if specific_text is not None else " ".join(all_texts)
             new_cls = cur_page_cls[:min_id]
             new_cls.append({'box': box, 'page': cur_page_cls[0]['page'], 'text': text})
-            for i in range(min_id, len(cur_page_cls)): # Put those box that not has iou > 0.6 overlap back
-                if i in meet_iou_require_id: continue
-                else: new_cls.append(cur_page_cls[i])
+            for i in range(min_id, len(cur_page_cls)):  # Put those box that not has iou > 0.6 overlap back
+                if i in meet_iou_require_id:
+                    continue
+                else:
+                    new_cls.append(cur_page_cls[i])
         cur_page_cls = new_cls
     return cur_page_cls
+
 
 def gen_renewed_json(raw_json, detect_box):
     renewed_cls = []
@@ -112,39 +122,43 @@ def gen_renewed_json(raw_json, detect_box):
         renewed_cls.extend(cur_page_cls)
     return renewed_cls
 
+
 def visual_cl(content_lines, img_savedir):
     def put_label(img, box, color_rgb, label, left_border=20, bg_color="#000000"):
         draw = ImageDraw.Draw(img)
         draw.rectangle(box, outline=color_rgb, width=1)
-        lable_box = [box[0]-left_border, box[1], box[0]-3, box[1]+10]
+        lable_box = [box[0] - left_border, box[1], box[0] - 3, box[1] + 10]
         draw.rectangle(lable_box, fill=bg_color, width=-1)
         font = ImageFont.truetype("msyh.ttf", size=8)
-        draw.text((lable_box[0],lable_box[1]), label, font=font, fill="#FFFFFF")
+        draw.text((lable_box[0], lable_box[1]), label, font=font, fill="#FFFFFF")
+
     all_page = set()
     for cl in content_lines: all_page.add(cl['page'])
     for page_id in all_page:
-        img = Image.open(osp.join(img_savedir, "{}.png".format(page_id))) # RGB format
+        img = Image.open(osp.join(img_savedir, "{}.png".format(page_id)))  # RGB format
         cur_page_cls = [x for x in content_lines if x['page'] == page_id]
         for cl_id, cl in enumerate(cur_page_cls):
-            put_label(img, cl['box'], (0,0,0), str(cl_id))
+            put_label(img, cl['box'], (0, 0, 0), str(cl_id))
         img.save(osp.join(img_savedir, "{}_renewed.png".format(page_id)), "png")
+
 
 def init_args():
     import argparse
-    parser = argparse.ArgumentParser(description = "Detect tab/img/equ on images, \
+    parser = argparse.ArgumentParser(description="Detect tab/img/equ on images, \
         generate new annotation using the detection results and the raw content line results")
-    parser.add_argument("--save_json_path_stg1", default = "pdf_parser/acl_stage1.json", type = str, \
-        help = "The path to save informations about image paths/json annotations of pdfs")
-    parser.add_argument("--save_json_path_stg2", default = "pdf_parser/acl_stage2.json", type = str, \
-        help = "The path to save merged informations about image paths/json annotations of pdfs")
-    parser.add_argument("--config_file", default = "detection/cascade_rcnn_r101_fpn_1x_paperanno.py", type = str, \
-        help = "The path to cascade-rcnn config file.")
-    parser.add_argument("--check_pt", default = "detection/epoch_12.pth", type = str, \
-        help = "The path to cascade-rcnn checkpoint.")
-    parser.add_argument("--device", default = "cuda:0", type = str, \
-        help = "The gpu id to infer on.")
+    parser.add_argument("--save_json_path_stg1", default="pdf_parser/acl_stage1.json", type=str,
+                        help="The path to save informations about image paths/json annotations of pdfs")
+    parser.add_argument("--save_json_path_stg2", default="pdf_parser/acl_stage2.json", type=str,
+                        help="The path to save merged informations about image paths/json annotations of pdfs")
+    parser.add_argument("--config_file", default="detection/cascade_rcnn_r101_fpn_1x_paperanno.py", type=str,
+                        help="The path to cascade-rcnn config file.")
+    parser.add_argument("--check_pt", default="detection/epoch_12.pth", type=str,
+                        help="The path to cascade-rcnn checkpoint.")
+    parser.add_argument("--device", default="cuda:0", type=str,
+                        help="The gpu id to infer on.")
     args = parser.parse_args()
     return args
+
 
 def main():
     args = init_args()
@@ -163,6 +177,7 @@ def main():
         json_stg1[pdf_path]['annotation'] = json_path_stg2
         # visual_cl(renewed_json, os.path.dirname(json_stg1[pdf_path]["images"][0]))
     json.dump(json_stg1, open(args.save_json_path_stg2, "w"), indent=4)
+
 
 if __name__ == "__main__":
     main()

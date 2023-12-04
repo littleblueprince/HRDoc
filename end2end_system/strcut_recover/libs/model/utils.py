@@ -15,13 +15,13 @@ def align_labels(labels):
 
     aligned_labels = list()
     masks = torch.zeros([batch_size, max_len], dtype=dtype, device=device)
-    
+
     for batch_idx in range(batch_size):
         labels_pb = labels[batch_idx]
         cur_len = labels_pb.shape[0]
         aligned_labels_pi = F.pad(
             labels_pb,
-            (0, max_len-cur_len),
+            (0, max_len - cur_len),
             mode='constant',
             value=0
         )
@@ -45,13 +45,13 @@ def align_feats(feats):
 
     aligned_feats = list()
     masks = torch.zeros([batch_size, max_len], dtype=dtype, device=device)
-    
+
     for batch_idx in range(batch_size):
         feats_pb = feats[batch_idx]
         cur_len = feats_pb.shape[0]
         aligned_feats_pi = F.pad(
             feats_pb,
-            (0, 0, 0, max_len-cur_len),
+            (0, 0, 0, max_len - cur_len),
             mode='constant',
             value=0
         )
@@ -73,12 +73,12 @@ def align_tokens(tokens_ids, device, dtype):
         cur_length = tokens_ids_pb.shape[1]
         aligned_tokens_ids_pi = F.pad(
             tokens_ids_pb,
-            (0, max_length-cur_length, 0, 0),
+            (0, max_length - cur_length, 0, 0),
             mode='constant',
             value=0
         )
         aligned_tokens_ids.append(aligned_tokens_ids_pi)
-        masks[batch_idx, :cur_length] = 1   
+        masks[batch_idx, :cur_length] = 1
     aligned_tokens_ids = torch.cat(aligned_tokens_ids, dim=0)
     return aligned_tokens_ids, masks
 
@@ -89,4 +89,4 @@ def tokenize(tokenizer, token_batch, max_token=50):
         tokens = tokenizer(''.join(sentence), return_tensors="pt")
         tokens_ids.append(tokens['input_ids'][:, :max_token])
     aligned_tokens_ids, masks = align_tokens(tokens_ids, tokens_ids[0].device, tokens_ids[0].dtype)
-    return  aligned_tokens_ids, masks
+    return aligned_tokens_ids, masks
